@@ -1,5 +1,4 @@
 <?php
-
 $jsonData = file_get_contents('sites.json');
 $sites = json_decode($jsonData, true);
 ?>
@@ -99,12 +98,12 @@ $sites = json_decode($jsonData, true);
         </thead>
         <tbody>
             <?php
-            foreach ($sites as $site) {
-                echo "<tr data-status='waiting' data-url='" . $site['url'] . "' data-title='" . ($site['title'] ?? '') . "' data-body='" . ($site['body'] ?? '') . "'>";
+            foreach ($sites as $key => $site) {
+                echo "<tr data-status='waiting' data-indx='$key'>";
                 echo "<td class='icon'><div class='ball'></div></td>";
                 echo "<td class='url'><a href=" . $site['url'] . " target='_blank'>" . $site['url'] . "</a></td>";
                 echo "<td class='status'>⏳ aguardando...</td>";
-                echo "<td class='title'></td>";
+                echo "<td class='validate'></td>";
                 echo "</tr>";
             }
             ?>
@@ -114,16 +113,14 @@ $sites = json_decode($jsonData, true);
     <script>
         const rows = document.querySelectorAll('tbody tr');
         rows.forEach(row => {
-            const url = row.dataset.url;
-            const title = row.dataset.title;
-            const body = row.dataset.body;
+            const indx = row.dataset.indx;
             (async () => {
                 row.dataset.status = 'pending';
-                const response = await fetch(`check-site.php?url=${url}&title=${title}&body=${body}`);
+                const response = await fetch(`check-site.php?indx=${indx}`);
                 const data = await response.json();
                 row.dataset.status = data.status;
                 row.querySelector('td.status').innerHTML = data.message;
-                row.querySelector('td.title').innerHTML = `${data.title_check} ${data.title}`;
+                row.querySelector('td.validate').innerHTML = `${data.validate_check??''} ${data.validate??''}`;
             })();
         });
     </script>
