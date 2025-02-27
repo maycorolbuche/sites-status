@@ -76,6 +76,11 @@ foreach ($sites as $key => $site) {
             $data["message"] = "❌ site indisponível";
         }
 
+        if ($data["validate_check"] == "❌") {
+            $data["status"] = "error";
+            $data["message"] = "❌ site com problemas";
+        }
+
         if ($send_telegram && $data["status"] == "error") {
             foreach ($site["telegram"] ?? [] as $telegram) {
                 sendTelegramMessage($telegram["bot_token"], $telegram["chat_id"], "Problemas detectados no site: " . $url . "<pre>" . $data["message"] . "</pre>");
