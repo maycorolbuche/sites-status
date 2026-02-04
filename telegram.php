@@ -4,6 +4,8 @@ function sendTelegramMessage($botToken, $chatID, $mensagem)
     // URL da API do Telegram para enviar mensagens
     $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
 
+    $mensagem = preg_replace('/<br\s*\/?>/i', "\n", $mensagem);
+
     // Dados que serão enviados via POST
     $dados = [
         'chat_id' => $chatID,

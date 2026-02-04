@@ -50,7 +50,7 @@ foreach ($sites as $key => $site) {
                 $data["status"] = "success";
                 $data["message"] = "✔️ validado";
 
-                preg_match("/<title>(.*?)<\/title>/i", $html, $matches);
+                preg_match("/<title>(.*?)<\/title>/is", $html, $matches);
                 if ($title <> "") {
                     $data["validate_check"] = "❌";
                     if (isset($matches[1])) {
@@ -79,6 +79,42 @@ foreach ($sites as $key => $site) {
         if ($data["validate_check"] == "❌") {
             $data["status"] = "error";
             $data["message"] = "❌ site com problemas";
+        }
+
+        if (isset($site["path"]) && $site["path"] <> "") {
+            if (isset($site["malicious_files"])) {
+                $path = $site["path"];
+                $malicious_files_count = 0;
+                foreach ($site["malicious_files"] as $file) {
+                    $f = $path . "/" . $file;
+                    if (file_exists($f)) {
+                        $malicious_files_count++;
+                        unlink($f);
+                    }
+                }
+
+                if ($malicious_files_count > 0) {
+                    $data["status"] = "error";
+                    $data["message"] .= "<br>😈 arquivos maliciosos encontrados";
+                }
+            }
+        }
+
+        if ($data["status"] == "error") {
+            if (isset($site["callback"])) {
+                $url = $site["callback"];
+
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+                $response = curl_exec($ch);
+                if ($response === false) {
+                    $data["message"] .= "<br>❌ Erro no callback: " . curl_error($ch);
+                }
+                curl_close($ch);
+            }
         }
 
         if ($send_telegram && $data["status"] == "error") {
