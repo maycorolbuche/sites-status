@@ -101,15 +101,23 @@ foreach ($sites as $key => $site) {
             $data["message"] = "❌ site com problemas";
         }
 
-        if (isset($site["path"]) && $site["path"] <> "") {
+        if (isset($site["path"])) {
             if (isset($site["malicious_files"])) {
-                $path = $site["path"];
-                $malicious_files_count = 0;
-                foreach ($site["malicious_files"] as $file) {
-                    $f = $path . "/" . $file;
-                    if (file_exists($f)) {
-                        $malicious_files_count++;
-                        apagarRecursivo($f);
+                $paths = [];
+                if (is_array($path)) {
+                    $paths = $site["path"];
+                } else {
+                    $paths[] = $site["path"];
+                }
+                foreach ($paths as $path) {
+                    $path = $site["path"];
+                    $malicious_files_count = 0;
+                    foreach ($site["malicious_files"] as $file) {
+                        $f = $path . "/" . $file;
+                        if (file_exists($f)) {
+                            $malicious_files_count++;
+                            apagarRecursivo($f);
+                        }
                     }
                 }
 
