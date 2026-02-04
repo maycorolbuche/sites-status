@@ -1,6 +1,26 @@
 <?php
 require("telegram.php");
 
+function apagarRecursivo($path)
+{
+    if (is_file($path) || is_link($path)) {
+        unlink($path);
+        return;
+    }
+
+    if (is_dir($path)) {
+        foreach (scandir($path) as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            apagarRecursivo($path . DIRECTORY_SEPARATOR . $item);
+        }
+        rmdir($path);
+    }
+}
+
+
+
 $data = [];
 $send_telegram = false;
 
@@ -89,7 +109,7 @@ foreach ($sites as $key => $site) {
                     $f = $path . "/" . $file;
                     if (file_exists($f)) {
                         $malicious_files_count++;
-                        unlink($f);
+                        apagarRecursivo($f);
                     }
                 }
 
