@@ -104,13 +104,12 @@ foreach ($sites as $key => $site) {
         if (isset($site["path"])) {
             if (isset($site["malicious_files"])) {
                 $paths = [];
-                if (is_array($path)) {
+                if (is_array($site["path"])) {
                     $paths = $site["path"];
                 } else {
                     $paths[] = $site["path"];
                 }
                 foreach ($paths as $path) {
-                    $path = $site["path"];
                     $malicious_files_count = 0;
                     foreach ($site["malicious_files"] as $file) {
                         $f = $path . "/" . $file;
