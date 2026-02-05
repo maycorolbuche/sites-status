@@ -1,0 +1,53 @@
+# FORÇAR HTTPS
+
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+## BLOQUEIOS BÁSICOS
+
+# Bloquear .git
+
+RewriteRule ^\.git - [F,L]
+
+# Bloquear arquivos sensíveis
+
+<FilesMatch "^(\.env|\.htpasswd|\.user\.ini|wp-config\.php|config\.php|info\.php|phpinfo\.php)">
+    Require all denied
+</FilesMatch>
+
+# DESABILITAR LISTAGEM
+
+Options -Indexes
+
+# CABEÇALHOS SIMPLES
+
+<IfModule mod_headers.c>
+    # Previne o navegador de adivinhar o tipo de conteúdo (MIME-sniffing)
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Protege contra Clickjacking (impede o site de ser colocado em frames de outros sites)
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # Ativa o filtro de XSS em navegadores mais antigos
+    Header always set X-XSS-Protection "1; mode=block"
+
+    # Controla quais informações de origem são enviadas ao clicar em links
+    Header always set Referrer-Policy "no-referrer-when-downgrade"
+
+    # Bloqueia o uso de recursos como câmera e microfone por padrão
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
+# PROTEÇÃO SVG
+
+<FilesMatch "\.svg$">
+    Header set X-Content-Type-Options "nosniff"
+</FilesMatch>
+
+# PÁGINAS DE ERRO
+
+ErrorDocument 403 /403.shtml
+ErrorDocument 404 /404.shtml
+ErrorDocument 500 /500.shtml
