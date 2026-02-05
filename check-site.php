@@ -62,10 +62,25 @@ foreach ($sites as $key => $site) {
         $data["headers"] = $headers;
         if ($headers && strpos($headers[0], '200')) {
 
-            $html = file_get_contents($url);
+            $ch = curl_init($url);
+
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,   // retorna o HTML
+                CURLOPT_FOLLOWLOCATION => true,   // segue redirect (HTTP → HTTPS)
+                CURLOPT_TIMEOUT => 20,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; SiteFetcher/1.0)',
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_SSL_VERIFYHOST => 2,
+            ]);
+
+            $html = curl_exec($ch);
+
             if ($html === false) {
+                $error = curl_error($ch);
+                curl_close($ch);
                 $data["status"] = "error";
-                $data["message"] = "❌ erro ao acessar url";
+                $data["message"] = "❌ erro ao acessar url: " . $error;
             } else {
                 $data["status"] = "success";
                 $data["message"] = "✔️ validado";
@@ -93,7 +108,7 @@ foreach ($sites as $key => $site) {
             }
         } else {
             $data["status"] = "error";
-            $data["message"] = "❌ site indisponível";
+            $data["message"] = "❌ site indisponível: " . $headers[0];
         }
 
         if ($data["validate_check"] == "❌") {
