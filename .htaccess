@@ -17,6 +17,11 @@ RewriteRule ^\.git - [F,L]
     Require all denied
 </FilesMatch>
 
+# Bloqueia acesso direto a qualquer arquivo PHP, exceto os necessários
+RewriteCond %{THE_REQUEST} \.php [NC]
+RewriteCond %{REQUEST_URI} !/(index|check-site)\.php$ [NC]
+RewriteRule ^ - [F,L]
+
 # DESABILITAR LISTAGEM
 
 Options -Indexes
