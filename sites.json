@@ -12,7 +12,7 @@
     "id": "mdawiki",
     "name": "MDAWiki",
     "url": "https://mda.wiki.br/",
-    "hash": null,
+    "hash": "sha256:4114d4101e898db1c647a1d53bf9519ba910dc265fefd5fa33beb6607848c803",
     "hashMode": "title"
   }
 ]
