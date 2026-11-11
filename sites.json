@@ -25,7 +25,7 @@
     "id": "mxsoft",
     "name": "MXSoft",
     "url": "https://mxsoft.com.br/",
-    "hash": null,
+    "hash": "sha256:867453f0b8073442fc3007463f628e1ed70c280ccd39d798b2d4efe49be29422",
     "ignoreLinkFragments": [
       "/cdn-cgi/l/email-protection"
     ]
