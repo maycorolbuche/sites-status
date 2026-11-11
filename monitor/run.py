@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
-from content import check
+from content import capture_scope, check
 from remote import CONFIG, approved_history, initial_pr, load_snapshot, publish_snapshot, telegram
 
 DAYS = 90
@@ -29,6 +29,13 @@ def load_sites():
             raise ValueError(f"URL inválida para {identifier}")
         if site["hash"] is not None and not DIGEST.fullmatch(site["hash"]):
             raise ValueError(f"Hash inválida para {identifier}")
+        mode = site.get("hashMode")
+        if "hashMode" in site and mode not in ("title", "page", "element"):
+            raise ValueError(f"hashMode inválido para {identifier}")
+        if mode == "element" and not site.get("selector"):
+            raise ValueError(f"Modo element exige selector para {identifier}")
+        if mode in ("title", "page") and "selector" in site:
+            raise ValueError(f"Modo {mode} não usa selector para {identifier}")
         if not site["name"].strip() or any(
             not SELECTOR.fullmatch(selector)
             for selector in [site.get("selector", "main"), *site.get("ignore", [])]
@@ -96,6 +103,10 @@ def initial_alert(sites, site, digest, record):
 def update_record(sites, site, result, record, past, now, dates, live):
     if record.get("url") != site["url"]:
         record = {"url": site["url"]}
+    scope = list(capture_scope(site))
+    if record.get("capture_scope", ["legacy", site.get("selector", "main")]) != scope:
+        record = {"url": site["url"], "days": record.get("days", {})}
+    record["capture_scope"] = scope
     digest = result.get("hash")
     current = site["hash"]
     valid = set(past) | {current} if current else set()
@@ -181,7 +192,7 @@ def main():
         key = site["id"]
         state[key], report = update_record(
             sites, site, result, old_state.get(key, {}),
-            approvals.get((key, site["url"]), {}), now, dates, args.live,
+            approvals.get((key, site["url"], *capture_scope(site)), {}), now, dates, args.live,
         )
         reports.append(report)
         print(f"{key}: {report['status']}")

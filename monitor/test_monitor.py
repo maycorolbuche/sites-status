@@ -42,6 +42,26 @@ class MonitorTests(unittest.TestCase):
         self.assertNotEqual(original, fingerprint(html.replace("size=50", "size=80"), site, site["url"])[0])
         self.assertNotEqual(original, fingerprint(html.replace("/photo.png", "/other.png"), site, site["url"])[0])
 
+    def test_capture_modes_use_only_the_selected_content(self):
+        html = '<title>Demo</title><body><main id="content">Principal</main><footer>Rodapé</footer></body>'
+        for mode, site in {
+            "title": dict(SITE, hashMode="title"),
+            "page": dict(SITE, hashMode="page"),
+            "element": dict(SITE, hashMode="element", selector="#content"),
+        }.items():
+            original, _ = fingerprint(html, site, site["url"])
+            for text, modes in [
+                ("Demo", {"title", "page"}),
+                ("Principal", {"element", "page"}),
+                ("Rodapé", {"page"}),
+            ]:
+                with self.subTest(mode=mode, text=text):
+                    changed, _ = fingerprint(html.replace(text, "Alterado"), site, site["url"])
+                    self.assertEqual(original != changed, mode in modes)
+        legacy, _ = fingerprint(html, SITE, SITE["url"])
+        changed, _ = fingerprint(html.replace("Rodapé", "Alterado"), SITE, SITE["url"])
+        self.assertEqual(legacy, changed)
+
     def test_baseline_proposal_and_change_alert_are_sent_once(self):
         original = observation("Versão original")
         changed = observation("Versão alterada")
@@ -101,7 +121,7 @@ class GitTests(unittest.TestCase):
             env = dict(os.environ, GIT_AUTHOR_DATE=date, GIT_COMMITTER_DATE=date)
             git("commit", "-qm", "Aprovar", env=env)
         history = approved_history(NOW - timedelta(days=90))
-        self.assertEqual(set(history[(SITE["id"], SITE["url"])]), {second})
+        self.assertEqual(set(history[(SITE["id"], SITE["url"], "legacy", "main")]), {second})
 
         subprocess.run(["git", "init", "-q", "--bare", "remote"], check=True)
         git("remote", "add", "origin", str(Path("remote").resolve()))

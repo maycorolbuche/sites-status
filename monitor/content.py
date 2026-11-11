@@ -24,10 +24,16 @@ def matches(selector, tag, attrs):
     return selector == tag
 
 
+def capture_scope(site):
+    mode = site.get("hashMode", "legacy")
+    selector = site.get("selector", "main") if mode in {"legacy", "element"} else None
+    return mode, selector
+
+
 class Page(HTMLParser):
     def __init__(self, site):
         super().__init__()
-        self.selector = site.get("selector", "main")
+        self.mode, self.selector = capture_scope(site)
         self.ignore = site.get("ignore", [])
         self.ignore_link_fragments = set(site.get("ignoreLinkFragments", []))
         self.ignore_image_query = set(site.get("ignoreImageQuery", []))
@@ -62,7 +68,7 @@ class Page(HTMLParser):
         attrs = dict(attributes)
         scope, hidden, heading = self.stack[-1][1:] if self.stack else (None, False, None)
         hidden = hidden or tag in HIDDEN or any(matches(rule, tag, attrs) for rule in self.ignore)
-        if not hidden and matches(self.selector, tag, attrs):
+        if not hidden and self.selector and matches(self.selector, tag, attrs):
             scope = "selected"
             self.found = True
         elif tag == "body":
@@ -107,10 +113,15 @@ class Page(HTMLParser):
             self.root_text.append(data)
 
     def fields(self):
+        title = normalize("".join(self.title))
+        if self.mode == "title":
+            return {"Título": title}
+        if self.mode == "element" and not self.found:
+            return {"Área monitorada": f"Elemento ausente: {self.selector}"}
         selected = self.sections["selected" if self.found else "body"]
         if not self.found and not self.has_body:
             selected = [["Conteúdo", self.root_text]]
-        fields = {"Título": normalize("".join(self.title))}
+        fields = {} if self.mode == "element" else {"Título": title}
         for label, parts in selected:
             label = normalize(" ".join(label)) if isinstance(label, list) else label
             label = label or "Seção sem título"
@@ -128,9 +139,9 @@ def fingerprint(html, site, final_url):
     page.feed(html)
     page.close()
     fields = page.fields()
-    if "selector" in site and not page.found:
+    if page.mode == "legacy" and "selector" in site and not page.found:
         fields["Área monitorada"] = f"Elemento ausente: {site['selector']}"
-    if urlsplit(final_url).netloc != urlsplit(site["url"]).netloc:
+    if page.mode in {"legacy", "page"} and urlsplit(final_url).netloc != urlsplit(site["url"]).netloc:
         fields["Domínio após redirecionamento"] = urlsplit(final_url).netloc
     payload = json.dumps(list(fields.items()), ensure_ascii=False, separators=(",", ":"))
     digest = "sha256:" + hashlib.sha256(payload.encode()).hexdigest()
@@ -159,6 +170,11 @@ def check(site):
                 return {"status": "unverified", "ms": elapsed, "reason": "Resposta maior que 4 MiB"}
             html = body.decode(response.headers.get_content_charset() or "utf-8", errors="replace")
             digest, sections = fingerprint(html, site, response.geturl())
+            if site["hash"] is None:
+                if site.get("hashMode") == "title" and not sections["Título"]["excerpt"]:
+                    return {"status": "unverified", "ms": elapsed, "reason": "Título HTML ausente"}
+                if site.get("hashMode") == "element" and list(sections) == ["Área monitorada"]:
+                    return {"status": "unverified", "ms": elapsed, "reason": "Elemento monitorado ausente"}
             return {"hash": digest, "sections": sections, "ms": elapsed, "http": code}
     except URLError as error:
         code = getattr(error, "code", None)

@@ -31,13 +31,23 @@ de `hash` no arquivo. O painel fica verde quando a checagem encontra a hash
 atual ou uma hash substituída há menos de 90 dias. A hash atual permanece válida
 enquanto estiver configurada.
 
-O monitor verifica título, texto, cabeçalhos e destinos de links e recursos
-do HTML retornado pelo servidor. Por padrão, lê `main` ou, se ausente, `body`.
-Use `"selector": "#conteudo"` para delimitar a área e `"ignore": [".contador"]`
-para excluir regiões que mudam legitimamente. Cada seletor aceita uma tag,
-um ID ou uma classe. `ignoreLinkFragments` ignora fragmentos somente nos
-caminhos de links informados. `ignoreImageQuery` ignora os parâmetros informados
-em imagens locais, preservando o caminho e os outros parâmetros.
+### Escolher o conteúdo da hash
+
+| `hashMode` | Conteúdo da referência |
+| --- | --- |
+| `title` | Somente o texto da tag HTML `<title>`. |
+| `page` | Título e conteúdo normalizado de todo o `<body>`, incluindo os destinos monitorados. |
+| `element` | Conteúdo normalizado do elemento indicado por `selector`, como `"#conteudo"`. |
+
+A ausência de `hashMode` preserva o comportamento das configurações existentes:
+título e conteúdo de `main` (ou `body` quando ausente), com suporte ao
+`selector` antigo. Cada seletor aceita uma tag, um ID ou uma classe.
+Use `"ignore": [".contador"]` para excluir regiões que variam legitimamente.
+`ignoreLinkFragments` ignora fragmentos nos caminhos de links informados.
+`ignoreImageQuery` ignora os parâmetros informados em imagens locais.
+
+Ao mudar o modo ou o seletor de um site, defina `"hash": null` para solicitar
+uma nova referência. O MDAWiki usa `title` porque a página inicial é dinâmica.
 
 O monitor não executa JavaScript nem verifica arquivos
 que a página não entrega. Mudanças nas regras de captura podem exigir uma nova

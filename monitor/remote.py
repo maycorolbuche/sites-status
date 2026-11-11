@@ -6,6 +6,8 @@ from tempfile import TemporaryDirectory
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
+from content import capture_scope
+
 CONFIG = "sites.json"
 DIST = "refs/heads/dist"
 STATE = ".monitor-state.json"
@@ -76,7 +78,7 @@ def approved_history(cutoff):
         for old in json.loads(previous.stdout):
             new = sites.get(old["id"])
             if new and old["url"] == new["url"] and old["hash"] and old["hash"] != new["hash"]:
-                approvals.setdefault((old["id"], old["url"]), {})[old["hash"]] = stamp
+                approvals.setdefault((old["id"], old["url"], *capture_scope(old)), {})[old["hash"]] = stamp
     return approvals
 
 
