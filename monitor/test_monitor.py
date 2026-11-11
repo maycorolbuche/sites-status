@@ -84,6 +84,23 @@ class MonitorTests(unittest.TestCase):
             self.assertEqual(report["status"], "changed")
             self.assertEqual(telegram.call_count, 2)
 
+    def test_today_groups_executions_and_resets_at_midnight_in_brasilia(self):
+        original = observation("Versão original")
+        site = dict(SITE, hash=original["hash"])
+        down = {"status": "down", "reason": "HTTP 503"}
+        record, report = self.update(site, down, {})
+        self.assertEqual(report["today"]["slots"]["48"][0]["status"], "down")
+        record, report = self.update(site, original, record)
+        self.assertEqual([run["status"] for run in report["today"]["slots"]["48"]], ["down", "up"])
+        self.assertEqual(report["days"][0]["checks"], {"down": 1, "up": 1})
+        after_midnight = datetime(2026, 11, 12, 3, 2, tzinfo=timezone.utc)
+        _, report = update_record(
+            [site], site, original, record, {}, after_midnight, ["2026-11-11", "2026-11-12"], False,
+        )
+        self.assertEqual(report["today"]["date"], "2026-11-12")
+        self.assertEqual(set(report["today"]["slots"]), {"0"})
+        self.assertEqual(report["days"][0]["checks"], {"down": 1, "up": 1})
+
     def test_availability_and_previously_approved_hash(self):
         original = observation("Versão original")
         latest = observation("Versão nova")
