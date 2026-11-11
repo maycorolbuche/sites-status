@@ -13,10 +13,9 @@ const calendar = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo
 const clock = new Intl.DateTimeFormat('pt-BR', {
   hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo',
 });
-const periodButtons = document.querySelectorAll('[data-period]');
+const periodLinks = document.querySelectorAll('[data-period]');
 const dayPriority = ['down', 'changed', 'pending', 'unverified', 'up'];
-let selectedPeriod = 'days';
-let latestData;
+const selectedPeriod = new URLSearchParams(location.search).get('period') === 'today' ? 'today' : 'days';
 const percent = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 });
 const summary = document.querySelector('#summary');
 const sites = document.querySelector('#sites');
@@ -40,7 +39,10 @@ function renderSite(site) {
   const card = element('article', '', 'site');
   const header = element('div', '', 'site-header');
   const title = element('h2');
-  title.append(link(site.name, site.url));
+  const siteLink = link(site.name, site.url);
+  siteLink.target = '_blank';
+  siteLink.rel = 'noopener noreferrer';
+  title.append(siteLink);
   const badge = element('span', labels[site.status], 'badge');
   badge.dataset.tone = site.status;
   header.append(title, badge);
@@ -109,7 +111,6 @@ function renderHistory(site) {
 }
 
 function render(data) {
-  latestData = data;
   const date = new Date(data.updatedAt);
   const stale = Date.now() - date.getTime() > 35 * 60 * 1000;
   const active = new Set(data.sites.map(site => site.status));
@@ -139,14 +140,8 @@ async function refresh() {
   }
 }
 
-for (const button of periodButtons) {
-  button.addEventListener('click', () => {
-    selectedPeriod = button.dataset.period;
-    for (const option of periodButtons) {
-      option.setAttribute('aria-pressed', String(option === button));
-    }
-    if (latestData) sites.replaceChildren(...latestData.sites.map(renderSite));
-  });
+for (const option of periodLinks) {
+  if (option.dataset.period === selectedPeriod) option.setAttribute('aria-current', 'page');
 }
 
 refresh();

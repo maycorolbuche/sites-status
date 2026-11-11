@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Status dos Sites</title>
-  <link rel="stylesheet" href="./status.css">
-  <script src="./status.js" defer></script>
+  <link rel="stylesheet" href="./status.css?v=2">
+  <script src="./status.js?v=2" defer></script>
 </head>
 <body>
   <header class="wrap header">
     <h1>Status dos Sites</h1>
     <div class="periods" role="group" aria-label="Período do histórico">
-      <button type="button" data-period="days" aria-pressed="true">90 dias</button>
-      <button type="button" data-period="today" aria-pressed="false">Hoje</button>
+      <a href="?period=days" data-period="days">90 dias</a>
+      <a href="?period=today" data-period="today">Hoje</a>
     </div>
   </header>
   <main class="wrap">
