@@ -32,6 +32,8 @@ function link(text, value) {
   const node = element('a', text);
   const url = new URL(value, location.href);
   if (['https:', 'http:'].includes(url.protocol)) node.href = url.href;
+  node.target = '_blank';
+  node.rel = 'noopener noreferrer';
   return node;
 }
 
@@ -39,10 +41,7 @@ function renderSite(site) {
   const card = element('article', '', 'site');
   const header = element('div', '', 'site-header');
   const title = element('h2');
-  const siteLink = link(site.name, site.url);
-  siteLink.target = '_blank';
-  siteLink.rel = 'noopener noreferrer';
-  title.append(siteLink);
+  title.append(link(site.name, site.url));
   const badge = element('span', labels[site.status], 'badge');
   badge.dataset.tone = site.status;
   header.append(title, badge);
