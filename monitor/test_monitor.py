@@ -71,6 +71,9 @@ class MonitorTests(unittest.TestCase):
             record, report = self.update(SITE, original, {}, live=True)
             self.assertEqual(report["status"], "pending")
             self.assertIn(pull["html_url"], telegram.call_args.args[0])
+            self.assertTrue(telegram.call_args.args[0].startswith(
+                "🔎 <b>Demo</b>\nhttps://example.com/\n\nHash inicial"
+            ))
             record, _ = self.update(SITE, original, record, live=True)
             telegram.assert_called_once()
             approved = dict(SITE, hash=original["hash"])
@@ -79,6 +82,9 @@ class MonitorTests(unittest.TestCase):
             record, report = self.update(approved, changed, record, live=True)
             self.assertEqual(report["status"], "changed")
             self.assertIn("Notícias", telegram.call_args.args[0])
+            self.assertTrue(telegram.call_args.args[0].startswith(
+                "🟡 <b>Demo</b>\nhttps://example.com/\n\nAlteração detectada"
+            ))
             self.assertIn(changed["hash"], telegram.call_args.args[0])
             _, report = self.update(approved, changed, record, live=True)
             self.assertEqual(report["status"], "changed")
