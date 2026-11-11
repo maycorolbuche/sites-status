@@ -4,6 +4,8 @@ import re
 import shutil
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
+from html import escape
+from os.path import commonprefix
 from pathlib import Path
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
@@ -61,7 +63,13 @@ def differences(before, after):
         elif old["excerpt"] == new["excerpt"]:
             lines.append(f"• {label}: conteúdo alterado")
         else:
-            lines.append(f"• {label}: {old['excerpt'][:100]} → {new['excerpt'][:100]}")
+            before_text, after_text = old["excerpt"], new["excerpt"]
+            start = max(0, len(commonprefix([before_text, after_text])) - 30)
+            prefix = "…" if start else ""
+            lines.append(
+                f"• {label}: {prefix}{before_text[start:start + 100]} → "
+                f"{prefix}{after_text[start:start + 100]}"
+            )
         if len(lines) == 6:
             break
     return "\n".join(lines) or "Diferença fora dos trechos guardados para comparação."
@@ -79,6 +87,13 @@ def classify(site, result, record, valid):
     return "changed"
 
 
+def alert_message(site, icon, details):
+    name = site["name"].strip()[:200]
+    url = site["url"][:1000]
+    limit = 3900 - len(icon) - len(name) - len(url) - 4
+    return f"{icon} <b>{escape(name)}</b>\n{escape(url)}\n\n{escape(details[:limit])}"
+
+
 def initial_alert(sites, site, digest, record):
     try:
         pull = initial_pr(sites, site, digest)
@@ -94,8 +109,7 @@ def initial_alert(sites, site, digest, record):
         "Hash registrada no PR",
     )
     if record.get("initial_notified") != key and telegram(
-        f"🔎 Hash inicial registrada para aprovação\n{site['name']}\n{site['url']}\n"
-        f"{proposal}\n{url}"
+        alert_message(site, "🔎", f"Hash inicial registrada para aprovação\n\n{proposal}\n{url}")
     ):
         record["initial_notified"] = key
     return url
@@ -141,17 +155,16 @@ def update_record(sites, site, result, record, past, now, dates, live):
             record.pop("alert", None)
         if live and record.get("alert") != key:
             if status == "down":
-                details = f"🔴 Site fora do ar\n{site['name']}\n{site['url']}\n{result['reason']}"
+                icon = "🔴"
+                details = f"Site fora do ar\n\n{result['reason']}"
             else:
                 baseline = record.get("last_approved")
                 if baseline not in valid:
                     baseline = current
                 diff = differences(recent.get(baseline, {}).get("fields"), result["sections"])
-                details = (
-                    f"🟡 Alteração detectada\n{site['name']}\n{site['url']}\n"
-                    f"Hash para aprovação: {digest}\n{diff}"
-                )
-            if telegram(details):
+                icon = "🟡"
+                details = f"Alteração detectada\n\nHash para aprovação: {digest}\n\n{diff}"
+            if telegram(alert_message(site, icon, details)):
                 record["alert"] = key
     else:
         record.pop("active_alert", None)

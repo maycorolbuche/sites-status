@@ -128,7 +128,7 @@ def telegram(message):
     if not token or not chat:
         return False
     payload = json.dumps({
-        "chat_id": chat, "text": message[:3900],
+        "chat_id": chat, "text": message, "parse_mode": "HTML",
         "link_preview_options": {"is_disabled": True},
     }).encode()
     request = Request(
