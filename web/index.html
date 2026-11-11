@@ -11,7 +11,10 @@
 <body>
   <header class="wrap header">
     <h1>Status dos Sites</h1>
-    <span>Últimos 90 dias</span>
+    <div class="periods" role="group" aria-label="Período do histórico">
+      <button type="button" data-period="days" aria-pressed="true">90 dias</button>
+      <button type="button" data-period="today" aria-pressed="false">Hoje</button>
+    </div>
   </header>
   <main class="wrap">
     <section class="banner" id="summary" aria-live="polite">Carregando status…</section>

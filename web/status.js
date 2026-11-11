@@ -9,6 +9,14 @@ const labels = {
 const timestamp = new Intl.DateTimeFormat('pt-BR', {
   dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo',
 });
+const calendar = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo' });
+const clock = new Intl.DateTimeFormat('pt-BR', {
+  hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo',
+});
+const periodButtons = document.querySelectorAll('[data-period]');
+const dayPriority = ['down', 'changed', 'pending', 'unverified', 'up'];
+let selectedPeriod = 'days';
+let latestData;
 const percent = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 });
 const summary = document.querySelector('#summary');
 const sites = document.querySelector('#sites');
@@ -43,26 +51,65 @@ function renderSite(site) {
   if (site.reason) meta.append(element('span', site.reason));
   if (site.approvalUrl) meta.append(link('Revisar hash inicial', site.approvalUrl));
 
-  const bars = element('div', '', 'bars');
-  bars.setAttribute('role', 'list');
-  bars.setAttribute('aria-label', `Histórico diário de ${site.name}`);
-  for (const day of site.days) {
-    const tone = ['down', 'changed', 'pending', 'unverified', 'up'].find(key => day.checks[key]) ?? 'none';
-    const bar = element('span', '', 'bar');
-    const counts = Object.entries(day.checks).map(([status, count]) => `${labels[status]}: ${count}`);
-    bar.dataset.tone = tone;
-    bar.title = `${day.date.split('-').reverse().join('/')} · ${counts.join(' · ') || labels.none}`;
-    bar.setAttribute('role', 'listitem');
-    bar.setAttribute('aria-label', bar.title);
-    bars.append(bar);
-  }
-  const axis = element('div', '', 'axis');
-  axis.append(element('span', '90 dias'), element('span', 'Hoje'));
-  card.append(header, meta, bars, axis);
+  card.append(header, meta, renderHistory(site));
   return card;
 }
 
+function formatSlot(index) {
+  const hour = String(Math.floor(index / 4)).padStart(2, '0');
+  const minute = String(index % 4 * 15).padStart(2, '0');
+  return `${hour}:${minute}`;
+}
+
+function renderHistory(site) {
+  const isToday = selectedPeriod === 'today';
+  const history = element('div');
+  const bars = element('div', '', isToday ? 'bars bars-today' : 'bars');
+  bars.setAttribute('role', 'list');
+  bars.setAttribute('aria-label', isToday ? `Checagens de hoje de ${site.name}` : `Histórico diário de ${site.name}`);
+  const details = element('div', '', 'history-details');
+  details.setAttribute('aria-live', 'polite');
+  const currentDate = calendar.format(new Date());
+  const timelineDate = site.today && calendar.format(new Date(`${site.today.date}T12:00:00Z`));
+  const slots = timelineDate === currentDate ? site.today.slots : {};
+  const entries = isToday ? Array.from({ length: 96 }, (_, index) => {
+    const runs = slots[index] ?? [];
+    return {
+      tone: runs.at(-1)?.status ?? 'none',
+      label: `${formatSlot(index)} · ${runs.map(run => `${clock.format(new Date(run.at))} ${labels[run.status]}`).join(' · ') || labels.none}`,
+      interactive: runs.length > 0,
+    };
+  }) : site.days.map(day => ({
+    tone: dayPriority.find(key => day.checks[key]) ?? 'none',
+    label: `${day.date.split('-').reverse().join('/')} · ${Object.entries(day.checks)
+      .map(([status, count]) => `${labels[status]}: ${count}`).join(' · ') || labels.none}`,
+  }));
+
+  for (const { tone, label, interactive } of entries) {
+    const item = element('span', '', 'bar');
+    item.dataset.tone = tone;
+    item.title = label;
+    item.setAttribute('role', 'listitem');
+    if (interactive) {
+      const button = element('button', '', 'bar-hit');
+      button.type = 'button';
+      button.setAttribute('aria-label', label);
+      button.addEventListener('click', () => { details.textContent = label; });
+      item.append(button);
+    } else {
+      item.setAttribute('aria-label', label);
+    }
+    bars.append(item);
+  }
+  const axis = element('div', '', 'axis');
+  axis.append(element('span', isToday ? '00:00' : '90 dias'), element('span', isToday ? '23:45' : 'Hoje'));
+  history.append(bars, axis);
+  if (isToday) history.append(details);
+  return history;
+}
+
 function render(data) {
+  latestData = data;
   const date = new Date(data.updatedAt);
   const stale = Date.now() - date.getTime() > 35 * 60 * 1000;
   const active = new Set(data.sites.map(site => site.status));
@@ -90,6 +137,16 @@ async function refresh() {
     summary.dataset.tone = 'pending';
     summary.textContent = 'Não foi possível atualizar o status';
   }
+}
+
+for (const button of periodButtons) {
+  button.addEventListener('click', () => {
+    selectedPeriod = button.dataset.period;
+    for (const option of periodButtons) {
+      option.setAttribute('aria-pressed', String(option === button));
+    }
+    if (latestData) sites.replaceChildren(...latestData.sites.map(renderSite));
+  });
 }
 
 refresh();

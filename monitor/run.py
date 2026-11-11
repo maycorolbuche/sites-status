@@ -12,6 +12,7 @@ from content import capture_scope, check
 from remote import CONFIG, approved_history, initial_pr, load_snapshot, publish_snapshot, telegram
 
 DAYS = 90
+MINUTES_PER_SLOT = 15
 LOCAL_ZONE = ZoneInfo("America/Sao_Paulo")
 DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
 SELECTOR = re.compile(r"[.#]?[a-zA-Z][\w-]*")
@@ -105,7 +106,11 @@ def update_record(sites, site, result, record, past, now, dates, live):
         record = {"url": site["url"]}
     scope = list(capture_scope(site))
     if record.get("capture_scope", ["legacy", site.get("selector", "main")]) != scope:
-        record = {"url": site["url"], "days": record.get("days", {})}
+        record = {
+            "url": site["url"],
+            "days": record.get("days", {}),
+            "today": record.get("today"),
+        }
     record["capture_scope"] = scope
     digest = result.get("hash")
     current = site["hash"]
@@ -158,6 +163,15 @@ def update_record(sites, site, result, record, past, now, dates, live):
     today[status] = today.get(status, 0) + 1
     record["days"] = history
 
+    local = now.astimezone(LOCAL_ZONE)
+    date = local.date().isoformat()
+    timeline = record.get("today") or {}
+    if timeline.get("date") != date:
+        timeline = {"date": date, "slots": {}}
+    slot = str((local.hour * 60 + local.minute) // MINUTES_PER_SLOT)
+    timeline["slots"].setdefault(slot, []).append({"at": now.isoformat(), "status": status})
+    record["today"] = timeline
+
     offline = sum(day.get("down", 0) for day in history.values())
     samples = sum(sum(day.values()) for day in history.values())
     report = {
@@ -166,6 +180,7 @@ def update_record(sites, site, result, record, past, now, dates, live):
         "reason": result.get("reason"), "approvalUrl": approval_url,
         "uptime": round(100 * (samples - offline) / samples, 2),
         "days": [{"date": date, "checks": history.get(date, {})} for date in dates],
+        "today": timeline,
     }
     return record, report
 

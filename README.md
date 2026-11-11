@@ -55,7 +55,16 @@ aprovação. Cadastre páginas públicas, pois pequenos trechos normalizados
 são guardados na branch `dist` para compor as diferenças do Telegram.
 
 O painel calcula disponibilidade a partir das checagens feitas nos últimos
-90 dias. Uma alteração com resposta HTTP bem-sucedida conta como site
+90 dias. A cor do dia segue esta prioridade: fora do ar, alteração,
+aguardando aprovação, integridade não verificada e operacional. Uma queda
+durante o dia mantém o quadrado vermelho mesmo depois da recuperação.
+
+A visão **Hoje** apresenta 96 intervalos de 15 minutos no horário de Brasília.
+A cor usa o resultado mais recente de cada intervalo, e o detalhe mostra todas
+as execuções nele. Intervalos sem execução ficam cinza. O detalhamento começa
+na primeira checagem após a atualização do painel.
+
+Uma alteração com resposta HTTP bem-sucedida conta como site
 disponível. Dias sem medições ficam cinza. O cron roda aos minutos 02, 17, 32
 e 47 e o painel sinaliza dados desatualizados após 35 minutos.
 
