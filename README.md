@@ -35,7 +35,11 @@ O monitor verifica título, texto, cabeçalhos e destinos de links e recursos
 do HTML retornado pelo servidor. Por padrão, lê `main` ou, se ausente, `body`.
 Use `"selector": "#conteudo"` para delimitar a área e `"ignore": [".contador"]`
 para excluir regiões que mudam legitimamente. Cada seletor aceita uma tag,
-um ID ou uma classe. O monitor não executa JavaScript nem verifica arquivos
+um ID ou uma classe. `ignoreLinkFragments` ignora fragmentos somente nos
+caminhos de links informados. `ignoreImageQuery` ignora os parâmetros informados
+em imagens locais, preservando o caminho e os outros parâmetros.
+
+O monitor não executa JavaScript nem verifica arquivos
 que a página não entrega. Mudanças nas regras de captura podem exigir uma nova
 aprovação. Cadastre páginas públicas, pois pequenos trechos normalizados
 são guardados na branch `dist` para compor as diferenças do Telegram.

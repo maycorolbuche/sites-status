@@ -34,6 +34,14 @@ class MonitorTests(unittest.TestCase):
         self.assertEqual(original, fingerprint(html.replace(">3<", ">4<"), site, site["url"])[0])
         self.assertNotEqual(original, fingerprint(html.replace("/correto", "/alterado"), site, site["url"])[0])
 
+    def test_normalizes_only_configured_link_fragments_and_image_parameters(self):
+        site = dict(SITE, ignoreLinkFragments=["/email"], ignoreImageQuery=["v"])
+        html = '<main><a href="/email#1">Contato</a><img src="/photo.png?v=1&amp;size=50"></main>'
+        original, _ = fingerprint(html, site, site["url"])
+        self.assertEqual(original, fingerprint(html.replace("#1", "#2").replace("v=1", "v=2"), site, site["url"])[0])
+        self.assertNotEqual(original, fingerprint(html.replace("size=50", "size=80"), site, site["url"])[0])
+        self.assertNotEqual(original, fingerprint(html.replace("/photo.png", "/other.png"), site, site["url"])[0])
+
     def test_baseline_proposal_and_change_alert_are_sent_once(self):
         original = observation("Versão original")
         changed = observation("Versão alterada")

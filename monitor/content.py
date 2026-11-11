@@ -3,7 +3,7 @@ import json
 import time
 from html.parser import HTMLParser
 from urllib.error import URLError
-from urllib.parse import urlsplit
+from urllib.parse import unquote_plus, urlsplit
 from urllib.request import Request, urlopen
 
 VOID = set("area base br col embed hr img input link meta param source track wbr".split())
@@ -25,16 +25,38 @@ def matches(selector, tag, attrs):
 
 
 class Page(HTMLParser):
-    def __init__(self, selector, ignore):
+    def __init__(self, site):
         super().__init__()
-        self.selector = selector
-        self.ignore = ignore
+        self.selector = site.get("selector", "main")
+        self.ignore = site.get("ignore", [])
+        self.ignore_link_fragments = set(site.get("ignoreLinkFragments", []))
+        self.ignore_image_query = set(site.get("ignoreImageQuery", []))
+        self.origin = urlsplit(site["url"]).netloc
         self.stack = []
         self.title = []
         self.sections = {"body": [["Conteúdo", []]], "selected": [["Conteúdo", []]]}
         self.found = False
         self.has_body = False
         self.root_text = []
+
+    def normalize_target(self, tag, target):
+        if not (tag == "a" and self.ignore_link_fragments or tag == "img" and self.ignore_image_query):
+            return target
+        try:
+            url = urlsplit(target)
+        except ValueError:
+            return target
+        if url.netloc and url.netloc != self.origin:
+            return target
+        if tag == "a" and url.path in self.ignore_link_fragments:
+            return url._replace(fragment="").geturl()
+        if tag == "img" and url.query:
+            query = "&".join(
+                parameter for parameter in url.query.split("&")
+                if unquote_plus(parameter.partition("=")[0]) not in self.ignore_image_query
+            )
+            return url._replace(query=query).geturl()
+        return target
 
     def handle_starttag(self, tag, attributes):
         attrs = dict(attributes)
@@ -56,6 +78,7 @@ class Page(HTMLParser):
                 }.get(tag, "src")
                 target = normalize(attrs.get(attribute) or "")
                 if target:
+                    target = self.normalize_target(tag, target)
                     self.sections[scope][-1][1].append(f"[{tag}: {target}]")
         if tag not in VOID:
             self.stack.append((tag, scope, hidden, heading))
@@ -101,7 +124,7 @@ class Page(HTMLParser):
 
 
 def fingerprint(html, site, final_url):
-    page = Page(site.get("selector", "main"), site.get("ignore", []))
+    page = Page(site)
     page.feed(html)
     page.close()
     fields = page.fields()
