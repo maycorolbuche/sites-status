@@ -24,8 +24,8 @@ body { margin: 0; }
 }
 .header { border-bottom: 1px solid var(--line); padding-block: 1.25rem; }
 .periods { display: flex; gap: .25rem; border: 1px solid var(--line); border-radius: .6rem; padding: .2rem; }
-.periods button { border: 0; border-radius: .4rem; padding: .4rem .65rem; color: var(--muted); background: transparent; font: inherit; font-size: .85rem; cursor: pointer; }
-.periods button[aria-pressed="true"] { background: var(--line); color: inherit; }
+.periods a { text-decoration: none; border: 0; border-radius: .4rem; padding: .4rem .65rem; color: var(--muted); background: transparent; font: inherit; font-size: .85rem; cursor: pointer; }
+.periods a[aria-current="page"] { background: var(--line); color: inherit; }
 h1 { font-size: 1.2rem; margin: 0; }
 footer, .axis, .site-meta, .legend { color: var(--muted); font-size: .85rem; }
 main { padding-block: 2rem; }
