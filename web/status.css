@@ -1,0 +1,61 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  background: #10131a;
+  color: #eef0f5;
+  color-scheme: dark;
+  --muted: #a1aabb;
+  --line: #303645;
+  --panel: #1a1f29;
+  --up: #3bd1a0;
+  --down: #ff7d86;
+  --changed: #f5c762;
+  --pending: #a5b3f8;
+  --none: #363d4b;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+.wrap { width: min(100% - 2rem, 55rem); margin-inline: auto; }
+.header, .site-header, .axis {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .75rem;
+}
+.header { border-bottom: 1px solid var(--line); padding-block: 1.25rem; }
+h1 { font-size: 1.2rem; margin: 0; }
+.header span, footer, .axis, .site-meta, .legend { color: var(--muted); font-size: .85rem; }
+main { padding-block: 2rem; }
+.banner, .site { border: 1px solid var(--line); border-radius: .8rem; background: var(--panel); }
+.banner { padding: 1.25rem; font-size: 1.2rem; font-weight: 650; }
+.legend { display: flex; gap: .65rem 1rem; flex-wrap: wrap; margin-block: 1.4rem .9rem; }
+[data-tone="up"] { --tone: var(--up); }
+[data-tone="down"] { --tone: var(--down); }
+[data-tone="changed"] { --tone: var(--changed); }
+[data-tone="pending"] { --tone: var(--pending); }
+[data-tone="none"], [data-tone="unverified"] { --tone: var(--none); }
+.legend span::before, .badge::before, .banner[data-tone]::before {
+  content: "";
+  display: inline-block;
+  vertical-align: .06em;
+  width: .6rem;
+  height: .6rem;
+  border-radius: 50%;
+  background: var(--tone);
+  margin-right: .45rem;
+}
+.site { padding: 1.15rem; margin-bottom: .8rem; }
+.site-header { flex-wrap: wrap; }
+h2 { margin: 0; font-size: 1rem; }
+a { color: inherit; text-underline-offset: .2em; }
+.badge { font-weight: 650; font-size: .85rem; color: var(--tone, var(--muted)); }
+.badge[data-tone="unverified"] { color: var(--muted); }
+.site-meta { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin-block: .55rem .95rem; }
+.bars { display: grid; grid-template-columns: repeat(90, minmax(0, 1fr)); gap: 2px; height: 1.6rem; }
+.bar { background: var(--tone); border-radius: 2px; min-width: 0; }
+.axis { margin-top: .45rem; }
+footer { padding-block: .65rem; }
+@media (max-width: 38rem) {
+  .site { padding: .9rem; }
+  .bars { gap: 1px; }
+}

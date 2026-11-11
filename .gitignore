@@ -1,1 +1,2 @@
-sites.json
+.build/
+__pycache__/

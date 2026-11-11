@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Status dos Sites</title>
+  <link rel="stylesheet" href="./status.css">
+  <script src="./status.js" defer></script>
+</head>
+<body>
+  <header class="wrap header">
+    <h1>Status dos Sites</h1>
+    <span>Últimos 90 dias</span>
+  </header>
+  <main class="wrap">
+    <section class="banner" id="summary" aria-live="polite">Carregando status…</section>
+    <div class="legend" aria-label="Legenda do histórico">
+      <span data-tone="up">Operacional</span>
+      <span data-tone="changed">Alteração</span>
+      <span data-tone="down">Indisponível</span>
+      <span data-tone="pending">Aguardando aprovação</span>
+      <span data-tone="none">Sem dados</span>
+    </div>
+    <section id="sites" aria-label="Sites monitorados"></section>
+    <footer id="updated"></footer>
+  </main>
+</body>
+</html>
