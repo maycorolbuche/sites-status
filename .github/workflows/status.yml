@@ -2,7 +2,7 @@ name: Monitorar sites e publicar painel
 
 on:
   schedule:
-    - cron: '2-47/15 * * * *'
+    - cron: '2,17,32,47 * * * *'
   workflow_dispatch:
   push:
     branches: [main]
