@@ -1,8 +1,9 @@
 name: Monitorar sites e publicar painel
 
 on:
-  schedule:
-    - cron: '2,17,32,47 * * * *'
+  # Agendamento interno desativado enquanto a Cloudflare dispara o workflow.
+  # schedule:
+  #   - cron: '2,17,32,47 * * * *'
   workflow_dispatch:
   push:
     branches: [main]
