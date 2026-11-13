@@ -127,18 +127,26 @@ def telegram(message):
     chat = os.getenv("TELEGRAM_CHAT_ID")
     if not token or not chat:
         return False
-    payload = json.dumps({
+    payload = {
         "chat_id": chat, "text": message, "parse_mode": "HTML",
         "link_preview_options": {"is_disabled": True},
-    }).encode()
+    }
+    thread = os.getenv("TELEGRAM_MESSAGE_THREAD_ID", "").strip()
+    if thread:
+        if not thread.isascii() or not thread.isdecimal() or int(thread) < 1:
+            print("::warning::TELEGRAM_MESSAGE_THREAD_ID deve ser um inteiro positivo.")
+            return False
+        payload["message_thread_id"] = int(thread)
     request = Request(
         f"https://api.telegram.org/bot{token}/sendMessage",
-        data=payload,
+        data=json.dumps(payload).encode(),
         headers={"Content-Type": "application/json"},
     )
     try:
         with urlopen(request, timeout=15) as response:
-            return json.load(response).get("ok", False)
+            if json.load(response).get("ok") is True:
+                return True
     except (URLError, OSError, ValueError):
-        print("::warning::Falha ao enviar alerta ao Telegram. A próxima checagem tentará novamente se o alerta ainda estiver ativo.")
-        return False
+        pass
+    print("::warning::Falha ao enviar mensagem ao Telegram.")
+    return False
