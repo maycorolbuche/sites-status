@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 from content import capture_scope, check
+from daily import send_daily_summary
 from remote import CONFIG, approved_history, initial_pr, load_snapshot, publish_snapshot, telegram
 
 DAYS = 90
@@ -229,6 +230,7 @@ def main():
         encoding="utf-8",
     )
     if args.live:
+        send_daily_summary(now.astimezone(LOCAL_ZONE), sites, old_state, state, telegram)
         publish_snapshot(public, state, previous)
 
 

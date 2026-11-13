@@ -14,6 +14,9 @@ GitHub Pages.
    abre as propostas de hash. O merge é feito pelo responsável pelo site.
 3. Em **Settings → Secrets and variables → Actions**, crie os secrets
    `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID`. O bot precisa poder enviar mensagens ao grupo.
+   Para enviar alertas e resumos a um tópico, crie também o secret
+   `TELEGRAM_MESSAGE_THREAD_ID` com o ID do tópico. Deixe-o vazio ou ausente
+   para enviar ao grupo.
 4. Em **Actions → Monitorar sites e publicar painel**, execute **Run workflow**
    na `main` ou aguarde a próxima rodada. A `dist` é criada automaticamente
    e precisa permitir atualizações do workflow, inclusive substituição de seu snapshot.
@@ -67,6 +70,17 @@ na primeira checagem após a atualização do painel.
 Uma alteração com resposta HTTP bem-sucedida conta como site
 disponível. Dias sem medições ficam cinza. O cron roda aos minutos 02, 17, 32
 e 47 e o painel sinaliza dados desatualizados após 35 minutos.
+
+## Resumo diário no Telegram
+
+À meia-noite no horário de Brasília, o GitHub Actions dispara o fechamento
+do dia anterior. Se a execução atrasar ou o Telegram recusar o envio, as
+checagens regulares da Cloudflare podem enviar o resumo na rodada seguinte.
+A data do último envio confirmado fica no snapshot da branch `dist`.
+
+O resumo mostra o total de checagens, as falhas de disponibilidade,
+as ocorrências de integridade e os sites sem checagens. O percentual de
+disponibilidade considera as checagens registradas no dia.
 
 ## Rodar localmente
 
