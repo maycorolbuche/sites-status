@@ -41,5 +41,15 @@
     "name": "MXSoft App",
     "url": "https://app.mxsoft.com.br/",
     "hash": "sha256:f1ed6276f6bb508640613feddf691f1a0bf94ea253bc71ae67d32b427309e1e0"
+  },
+  {
+    "id": "eletronicautomacoes",
+    "name": "EletronicAutomações",
+    "url": "https://eletronicautomacoes.com.br/",
+    "hash": null,
+    "hashMode": "page",
+    "ignoreLinkFragments": [
+      "/cdn-cgi/l/email-protection"
+    ]
   }
 ]
