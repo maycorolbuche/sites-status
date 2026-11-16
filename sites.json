@@ -46,7 +46,7 @@
     "id": "eletronicautomacoes",
     "name": "EletronicAutomações",
     "url": "https://eletronicautomacoes.com.br/",
-    "hash": null,
+    "hash": "sha256:73b92595ca2f924cab16e3c86e86ee93af9dc9bb2ac8981edecc0e477f3e8fb7",
     "hashMode": "page",
     "ignoreLinkFragments": [
       "/cdn-cgi/l/email-protection"
